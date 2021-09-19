@@ -1145,3 +1145,61 @@ int main()
 }
 ```
 
+# vector为空，size()-1的坑
+
+vector的size()函数返回的是一个无符号整数，当size() == 0，再减1,会导致溢出，从而使数据变大
+如代码:
+
+```cpp
+int main()
+{
+	vector<int> arr;
+	cout<<arr.size()<<endl;		// 输出  0
+	cout<<arr.size() - 1<<endl;	// 输出  4294967295
+}
+```
+
+**原因：**
+
+vec.size()，size返回值是unsigned int，当vec为空，返回无符号整型0,如果用这个0去减1，相当于32位0减了1， 因为是无符号，所以不会变为负数，而是32位1,32位1的十进制就是4294967295
+
+<img align='left' src="img/01C++%EF%BC%9ASTL%E3%80%81%E5%AE%B9%E5%99%A8.img/image-20210829143014548.png" alt="image-20210829143014548" style="zoom:50%;" />
+
+**该坑常见场景及解决方法：**
+
+```cpp
+int main()
+{
+	vector<int> arr;
+	cout << arr.size() << endl;		// 输出  0
+	cout << arr.size() - 1 << endl;	// 输出  429496729
+
+	// arr为空，但是表达式居然成立
+	for (int i = 0; i < arr.size() - 1; ++i)  
+	{
+		cout << "i < arr.size()-1成立" << endl;
+		arr[i] = i;  // 直接越界访问出错
+	}
+
+	// 解决办法：arr.size()返回的是一个无符号整数，直接-1会成一个很大的数，所以先用int接收，再减1
+	int size = arr.size();
+	for (int i = 0; i < size - 1; ++i)
+	{
+		cout << "i < size-1成立" << endl;
+		arr[i] = i;  // 循坏条件不成立，执行不到这一步
+	}
+}
+```
+
+# 区分greater<int>与less<int>
+
+```cpp
+sort (vec.begin(), vec.end());  // 从小到大
+sort(vec.begin(), vec.end(), less<int>());  // 从小到大
+sort(vec.begin(), vec.end(), greater<int>());  // 从大到小
+
+priority_queue<int>  que0;// 大顶堆
+priority_queue<int, vector<int>, less<int>> que1;  // 大顶堆
+priority_queue<int,vector<int>,greater<int>> que2;  // 小顶堆
+```
+
